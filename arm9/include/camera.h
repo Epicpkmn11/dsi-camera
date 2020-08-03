@@ -1,0 +1,13 @@
+#ifndef CAMERA_HPP
+#define CAMERA_HPP
+
+#define REG_CAM_MCNT *(vu16 *)0x4004200
+#define REG_CAM_CNT *(vu16 *)0x4004202
+#define REG_NDMA1SAD *(vu32 *)0x4004120
+#define REG_NDMA1DAD *(vu32 *)0x4004124
+#define REG_NDMA1TCNT *(vu32 *)0x4004128
+#define REG_NDMA1WCNT *(vu32 *)0x400412C
+#define REG_NDMA1BCNT *(vu32 *)0x4004130
+#define REG_NDMA1CNT *(vu32 *)0x4004138
+
+#endif
