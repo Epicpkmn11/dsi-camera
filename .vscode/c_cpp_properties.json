@@ -1,0 +1,30 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/opt/devkitpro/libnds/include/**",
+                "/opt/devkitpro/devkitARM/include/**",
+                "/opt/devkitpro/devkitARM/arm-none-eabi/include/**"
+            ],
+            "defines": [
+                "ARM9",
+                "VER_NUMBER=\"vX.X\""
+            ],
+            "macFrameworkPath": [],
+            "compilerPath": "/opt/devkitpro/devkitARM/bin/arm-none-eabi-g++",
+            "cStandard": "c11",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "gcc-x64",
+            "forcedInclude": [
+                "/opt/devkitpro/libnds/include/nds/arm9/input.h",
+                "/opt/devkitpro/devkitARM/arm-none-eabi/include/sys/unistd.h"
+            ],
+            "browse": {
+                "path": []
+            }
+        }
+    ],
+    "version": 4
+}

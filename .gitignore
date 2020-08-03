@@ -1,0 +1,7 @@
+*/build
+*.nds
+*.elf
+*.cia
+
+*.DS_Store
+.vscode
