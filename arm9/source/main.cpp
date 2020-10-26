@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
 	bool inner = false;
 	while(1) {
 		swiWaitForVBlank();
-		REG_NDMA1CNT  = 0x8B044000; // NDMA1CNT, start camera DMA
+		REG_NDMA1CNT = 0x8B044000; // NDMA1CNT, start camera DMA
 		scanKeys();
 		if(keysDown() & KEY_A) {
 			*(u16 *)0x4004202 &= ~0x8000;
@@ -69,7 +69,8 @@ int main(int argc, char **argv) {
 				fifoSendValue32(FIFO_USER_01, 3);
 				while(!fifoCheckValue32(FIFO_USER_02))
 					swiWaitForVBlank();
-				printf("Enable: 0x%lx\n", fifoGetValue32(FIFO_USER_02));REG_CAM_CNT |= 0x2000; // CAM_CNT, enable YUV-to-RGB555
+				printf("Enable: 0x%lx\n", fifoGetValue32(FIFO_USER_02));
+				REG_CAM_CNT |= 0x2000; // CAM_CNT, enable YUV-to-RGB555
 
 				REG_CAM_CNT |= 0x2000; // CAM_CNT, enable YUV-to-RGB555
 				REG_CAM_CNT = (REG_CAM_CNT & ~0x000F) | 0x0003;
