@@ -94,6 +94,11 @@ int main(int argc, char **argv) {
 			inner = !inner;
 			REG_CAM_CNT |= ~0x8000;
 		} else if(keysDown() & KEY_START) {
+			// Disable camera so the light turns off
+			fifoSendValue32(FIFO_USER_01, inner ? 2 : 4);
+			while(!fifoCheckValue32(FIFO_USER_02))
+				swiWaitForVBlank();
+
 			return 0;
 		}
 	}
