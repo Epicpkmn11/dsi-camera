@@ -69,7 +69,12 @@ int main(int argc, char **argv) {
 				fifoSendValue32(FIFO_USER_01, 3);
 				while(!fifoCheckValue32(FIFO_USER_02))
 					swiWaitForVBlank();
-				printf("Enable: 0x%lx\n", fifoGetValue32(FIFO_USER_02));
+				printf("Enable: 0x%lx\n", fifoGetValue32(FIFO_USER_02));REG_CAM_CNT |= 0x2000; // CAM_CNT, enable YUV-to-RGB555
+
+				REG_CAM_CNT |= 0x2000; // CAM_CNT, enable YUV-to-RGB555
+				REG_CAM_CNT = (REG_CAM_CNT & ~0x000F) | 0x0003;
+				REG_CAM_CNT |= 0x0020; // CAM_CNT, flush data fifo
+				REG_CAM_CNT |= 0x8000; // CAM_CNT, start transfer
 			} else {
 				fifoSendValue32(FIFO_USER_01, 4);
 				while(!fifoCheckValue32(FIFO_USER_02))
@@ -80,6 +85,11 @@ int main(int argc, char **argv) {
 				while(!fifoCheckValue32(FIFO_USER_02))
 					swiWaitForVBlank();
 				printf("Enable: 0x%lx\n", fifoGetValue32(FIFO_USER_02));
+
+				REG_CAM_CNT |= 0x2000; // CAM_CNT, enable YUV-to-RGB555
+				REG_CAM_CNT = (REG_CAM_CNT & ~0x000F) | 0x0003;
+				REG_CAM_CNT |= 0x0020; // CAM_CNT, flush data fifo
+				REG_CAM_CNT |= 0x8000; // CAM_CNT, start transfer
 			}
 			inner = !inner;
 			REG_CAM_CNT |= ~0x8000;
