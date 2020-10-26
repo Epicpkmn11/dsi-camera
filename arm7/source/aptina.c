@@ -55,8 +55,6 @@ void aptSetMcu(u8 device, u16 reg, u16 mask) {
 
 // https://problemkaputt.de/gbatek.htm#dsiaptinacamerainitialization
 void init(u8 device) {
-	bool xflip = false;
-
 	aptWriteRegister(device, 0x001A, 0x0003); // RESET_AND_MISC_CONTROL (issue reset)   ;\reset
 	aptWriteRegister(device, 0x001A, 0x0000); // RESET_AND_MISC_CONTROL (release reset) ;/
 	aptWriteRegister(device, 0x0018, 0x4028); // STANDBY_CONTROL (wakeup)               ;\.
@@ -104,7 +102,7 @@ void init(u8 device) {
 	if(device == I2C_CAM0) {                  //                                  ;\.
 		aptWriteMcu(device, 0x2717, 0x0024);  // MODE_SENSOR_READ_MODE_A          ; Read Mode
 		aptWriteMcu(device, 0x272D, 0x0024);  // MODE_SENSOR_READ_MODE_B          ; with x-flip
-	} else if(xflip) {                        //                                  ; on internal
+	} else {                                  //                                  ; on internal
 		aptWriteMcu(device, 0x2717, 0x0025);  // MODE_SENSOR_READ_MODE_A          ; camera
 		aptWriteMcu(device, 0x272D, 0x0025);  // MODE_SENSOR_READ_MODE_B          ;/
 	}
