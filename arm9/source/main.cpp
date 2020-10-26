@@ -72,7 +72,12 @@ int main(int argc, char **argv) {
 		} while(!pressed);
 
 		if(pressed & KEY_A) {
-			*(u16 *)0x4004202 &= ~0x8000;
+			// Wait for previous transfer to finish
+				while(REG_NDMA1CNT & BIT(31))
+					swiWaitForVBlank();
+
+			// Pause transfer
+			REG_CAM_CNT &= ~0x8000;
 			if(inner) {
 				fifoSendValue32(FIFO_USER_01, 2);
 				while(!fifoCheckValue32(FIFO_USER_02))
@@ -106,7 +111,8 @@ int main(int argc, char **argv) {
 				REG_CAM_CNT |= 0x8000; // CAM_CNT, start transfer
 			}
 			inner = !inner;
-			REG_CAM_CNT |= ~0x8000;
+			// Resume transfer
+			REG_CAM_CNT |= 0x8000;
 		} else if(fatInited && pressed & (KEY_L | KEY_R)) {
 			FILE *file = fopen("photo.bmp", "wb");
 			if(file) {
@@ -123,9 +129,12 @@ int main(int argc, char **argv) {
 				while(REG_NDMA1CNT & BIT(31))
 					swiWaitForVBlank();
 
+				// Pause transfer
+				REG_CAM_CNT &= ~0x8000;
+
 				// BGR -> RGB
 				for(int i = 0; i < 256 * 192; i++) {
-					buffer[i] = buffer[i] >> 10 | (buffer[i] & (0x1F << 5)) | (buffer[i] & 0x1F) << 10 | BIT(15);
+					buffer[i] = ((buffer[i] >> 10) & 0x1F) | (buffer[i] & (0x1F << 5)) | (buffer[i] & 0x1F) << 10;
 				}
 
 				// Header for a 256x192 16 bit BMP
@@ -150,11 +159,8 @@ int main(int argc, char **argv) {
 				// Set NDMA back to screen
 				REG_NDMA1DAD = (u32)bgGetGfxPtr(bg3Main); // NDMA1DAD, dest RAM/VRAM
 
-				// For some reason the camera freezes... Start data transfer again
-				REG_CAM_CNT |= 0x2000; // CAM_CNT, enable YUV-to-RGB555
-				REG_CAM_CNT = (REG_CAM_CNT & ~0x000F) | 0x0003;
-				REG_CAM_CNT |= 0x0020; // CAM_CNT, flush data fifo
-				REG_CAM_CNT |= 0x8000; // CAM_CNT, start transfer
+				// Resume transfer
+				REG_CAM_CNT |= 0x8000;
 			}
 		} else if(pressed & KEY_START) {
 			// Disable camera so the light turns off
