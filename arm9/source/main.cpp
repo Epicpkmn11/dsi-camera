@@ -55,8 +55,8 @@ int main(int argc, char **argv) {
 
 	bool inner = false;
 	while(1) {
-		// dmaFillHalfWords(0xfc1f, bgGetGfxPtr(bg3Main), 256 * 192 * 2);
 		swiWaitForVBlank();
+		REG_NDMA1CNT  = 0x8B044000; // NDMA1CNT, start camera DMA
 		scanKeys();
 		if(keysDown() & KEY_A) {
 			*(u16 *)0x4004202 &= ~0x8000;
