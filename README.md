@@ -1,7 +1,8 @@
 # DSi camera test
 
-This is an attempt to make a homebrew app that can use the DSi's cameras. Currently it reads and prints a camera's ID, and tries to initialize the outer camera and display it on the top screen, but is just showing a black screen...
+This is an example app for using the DSi's Cameras. Currently it can show both cameras and save a picture as photo.bmp.
 
 Credits to:
+- [Arisotura](http://kuribo64.net) for finding why it wasn't working
 - [devkitPro](https://github.com/devkitPro) for devkitARM and libnds
 - [nocash](https://problemkaputt.de) for GBATek
