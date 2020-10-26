@@ -40,7 +40,7 @@ u8 i2cGetResult();
 void i2cSetDelay(u8 device);
 
 u8 aptGetData(u8 flags) {
-	REG_I2CCNT = 0xD0 | flags;
+	REG_I2CCNT = 0xC0 | flags;
 	i2cWaitBusy();
 	return REG_I2CDATA;
 }
@@ -91,7 +91,7 @@ u16 aptReadRegister(u8 device, u16 reg) {
 		   aptSelectRegister(reg & 0xFF, I2C_STOP)) {
 			i2cDelay();
 			if(aptSelectDevice(device | 1, I2C_START)) {
-				return (aptGetData(I2C_READ) << 8) | aptGetData(I2C_STOP | I2C_READ);
+				return (aptGetData(I2C_READ | I2C_ACK) << 8) | aptGetData(I2C_STOP | I2C_READ);
 			}
 		}
 
