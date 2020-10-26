@@ -1,5 +1,6 @@
 #include "camera.h"
 
+#include <fat.h>
 #include <nds.h>
 #include <stdio.h>
 
@@ -8,6 +9,10 @@ int main(int argc, char **argv) {
 	vramSetBankA(VRAM_A_MAIN_BG);
 	videoSetMode(MODE_5_2D);
 	int bg3Main = bgInit(3, BgType_Bmp16, BgSize_B16_256x256, 1, 0);
+
+	bool fatInited = fatInitDefault();
+	if(!fatInited)
+		printf("fatInitDefault() failed, photos\ncannot be saved.\n");
 
 	printf("Initializing...\n");
 	// https://problemkaputt.de/gbatek.htm#dsicameras
@@ -53,12 +58,20 @@ int main(int argc, char **argv) {
 	REG_NDMA1BCNT = 0x00000002;                // NDMA1BCNT, timing interval or so
 	REG_NDMA1CNT  = 0x8B044000;                // NDMA1CNT, start camera DMA
 
-	bool inner = false;
+	printf("\nA to swap, L/R to take picture\n");
+
+	bool inner  = false;
+	u16 pressed = 0;
 	while(1) {
-		swiWaitForVBlank();
-		REG_NDMA1CNT = 0x8B044000; // NDMA1CNT, start camera DMA
-		scanKeys();
-		if(keysDown() & KEY_A) {
+		do {
+			swiWaitForVBlank();
+			if(!(REG_NDMA1CNT & BIT(31)))
+				REG_NDMA1CNT = 0x8B044000; // NDMA1CNT, start camera DMA
+			scanKeys();
+			pressed = keysDown();
+		} while(!pressed);
+
+		if(pressed & KEY_A) {
 			*(u16 *)0x4004202 &= ~0x8000;
 			if(inner) {
 				fifoSendValue32(FIFO_USER_01, 2);
@@ -94,7 +107,56 @@ int main(int argc, char **argv) {
 			}
 			inner = !inner;
 			REG_CAM_CNT |= ~0x8000;
-		} else if(keysDown() & KEY_START) {
+		} else if(fatInited && pressed & (KEY_L | KEY_R)) {
+			FILE *file = fopen("photo.bmp", "wb");
+			if(file) {
+				printf("Saving BMP... ");
+
+				// Wait for previous transfer to finish
+				while(REG_NDMA1CNT & BIT(31))
+					swiWaitForVBlank();
+
+				// Get frame
+				u16 *buffer  = new u16[256 * 192];
+				REG_NDMA1DAD = (u32)buffer; // NDMA1DAD, dest RAM/VRAM
+				REG_NDMA1CNT = 0x8B044000;  // NDMA1CNT, start camera DMA
+				while(REG_NDMA1CNT & BIT(31))
+					swiWaitForVBlank();
+
+				// BGR -> RGB
+				for(int i = 0; i < 256 * 192; i++) {
+					buffer[i] = buffer[i] >> 10 | (buffer[i] & (0x1F << 5)) | (buffer[i] & 0x1F) << 10 | BIT(15);
+				}
+
+				// Header for a 256x192 16 bit BMP
+				constexpr u8 bmpHeader[] = {0x42, 0x4D, 0x46, 0x80, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00,
+											0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0xC0, 0x00,
+											0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x80,
+											0x01, 0x00, 0x13, 0x0B, 0x00, 0x00, 0x13, 0x0B, 0x00, 0x00, 0x00, 0x00,
+											0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x7C, 0x00, 0x00, 0xE0, 0x03,
+											0x00, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+				fwrite(bmpHeader, 1, sizeof(bmpHeader), file);
+
+				// Write image data, upside down as that's how BMPs want it
+				for(int i = 191; i >= 0; i--) {
+					fwrite(buffer + (i * 256), 2, 256, file);
+				}
+
+				delete[] buffer;
+				fclose(file);
+				printf("Done!\n");
+
+				// Set NDMA back to screen
+				REG_NDMA1DAD = (u32)bgGetGfxPtr(bg3Main); // NDMA1DAD, dest RAM/VRAM
+
+				// For some reason the camera freezes... Start data transfer again
+				REG_CAM_CNT |= 0x2000; // CAM_CNT, enable YUV-to-RGB555
+				REG_CAM_CNT = (REG_CAM_CNT & ~0x000F) | 0x0003;
+				REG_CAM_CNT |= 0x0020; // CAM_CNT, flush data fifo
+				REG_CAM_CNT |= 0x8000; // CAM_CNT, start transfer
+			}
+		} else if(pressed & KEY_START) {
 			// Disable camera so the light turns off
 			fifoSendValue32(FIFO_USER_01, inner ? 2 : 4);
 			while(!fifoCheckValue32(FIFO_USER_02))
