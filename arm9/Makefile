@@ -33,8 +33,8 @@ endif
 # all directories are relative to this makefile
 #---------------------------------------------------------------------------------
 BUILD		:=	build
-SOURCES		:=	source
-INCLUDES	:=	include ../shared/include
+SOURCES		:=	source source/quirc
+INCLUDES	:=	include include/quirc ../shared/include
 DATA		:=
 
 #---------------------------------------------------------------------------------

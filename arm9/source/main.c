@@ -1,5 +1,6 @@
 #include "camera.h"
 #include "lodepng.h"
+#include "quirc.h"
 #include "version.h"
 
 #include <dirent.h>
@@ -63,9 +64,10 @@ int main(int argc, char **argv) {
 	cameraActivate(camera);
 
 	if(fatInited)
-		printf("\nA to swap, L/R to take picture\n");
+		printf("\nA to swap, L/R to take picture,\n");
 	else
 		printf("\nA to swap\n");
+	printf("Y to scan QR\n");
 
 	while(1) {
 		u16 pressed;
@@ -135,6 +137,41 @@ int main(int argc, char **argv) {
 			free(rgb);
 
 			printf("Done!\nSaved to:\n%s\n\n", imgName);
+		} else if(pressed & KEY_Y) {
+			printf("Scanning for QR... ");
+
+			// Wait for previous transfer to finish
+			while(cameraTransferActive())
+				swiWaitForVBlank();
+
+			// Get image
+			u16 *buffer = (u16 *)malloc(640 * 480 * sizeof(u16));
+			cameraTransferStart(buffer, CAPTURE_MODE_CAPTURE);
+			while(cameraTransferActive())
+				swiWaitForVBlank();
+			cameraTransferStop();
+
+			struct quirc *q = quirc_new();
+			quirc_resize(q, 640, 480);
+			uint8_t *qrbuffer = quirc_begin(q, NULL, NULL);
+			// Copy Y values to qrbuffer
+			for(int i = 0; i < 640 * 480; i++) {
+				qrbuffer[i] = buffer[i] & 0xFF;
+			}
+			quirc_end(q);
+
+			if(quirc_count(q) > 0) {
+				struct quirc_code code;
+				struct quirc_data data;
+				quirc_extract(q, 0, &code);
+				if(!quirc_decode(&code, &data)) {
+					printf("\n%s\n", data.payload);
+				}
+			}
+
+			quirc_destroy(q);
+			free(buffer);
+			printf("Done!\n");
 		} else if(pressed & KEY_START) {
 			// Disable camera so the light turns off
 			cameraDeactivate(camera);
