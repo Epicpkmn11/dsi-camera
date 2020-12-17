@@ -10,4 +10,12 @@
 #define REG_NDMA1BCNT *(vu32 *)0x4004130
 #define REG_NDMA1CNT *(vu32 *)0x4004138
 
+enum {
+	CAM_INIT        = 0,
+	CAM0_ACTIVATE   = 1,
+	CAM0_DEACTIVATE = 2,
+	CAM1_ACTIVATE   = 3,
+	CAM1_DEACTIVATE = 4,
+};
+
 #endif

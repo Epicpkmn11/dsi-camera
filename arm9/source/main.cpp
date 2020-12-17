@@ -73,46 +73,33 @@ int main(int argc, char **argv) {
 
 		if(pressed & KEY_A) {
 			// Wait for previous transfer to finish
-				while(REG_NDMA1CNT & BIT(31))
-					swiWaitForVBlank();
+			while(REG_NDMA1CNT & BIT(31))
+				swiWaitForVBlank();
 
 			// Pause transfer
 			REG_CAM_CNT &= ~0x8000;
-			if(inner) {
-				fifoSendValue32(FIFO_USER_01, 2);
-				while(!fifoCheckValue32(FIFO_USER_02))
-					swiWaitForVBlank();
-				printf("Disable: 0x%lx\n", fifoGetValue32(FIFO_USER_02));
 
-				fifoSendValue32(FIFO_USER_01, 3);
-				while(!fifoCheckValue32(FIFO_USER_02))
-					swiWaitForVBlank();
-				printf("Enable: 0x%lx\n", fifoGetValue32(FIFO_USER_02));
-				REG_CAM_CNT |= 0x2000; // CAM_CNT, enable YUV-to-RGB555
+			// Tell ARM7 to switch cameras
+			fifoSendValue32(FIFO_USER_01, inner ? CAM0_DEACTIVATE : CAM1_DEACTIVATE);
+			while(!fifoCheckValue32(FIFO_USER_02))
+				swiWaitForVBlank();
+			printf("Disable: 0x%lx\n", fifoGetValue32(FIFO_USER_02));
 
-				REG_CAM_CNT |= 0x2000; // CAM_CNT, enable YUV-to-RGB555
-				REG_CAM_CNT = (REG_CAM_CNT & ~0x000F) | 0x0003;
-				REG_CAM_CNT |= 0x0020; // CAM_CNT, flush data fifo
-				REG_CAM_CNT |= 0x8000; // CAM_CNT, start transfer
-			} else {
-				fifoSendValue32(FIFO_USER_01, 4);
-				while(!fifoCheckValue32(FIFO_USER_02))
-					swiWaitForVBlank();
-				printf("Disable: 0x%lx\n", fifoGetValue32(FIFO_USER_02));
+			fifoSendValue32(FIFO_USER_01, inner ? CAM1_ACTIVATE : CAM0_ACTIVATE);
+			while(!fifoCheckValue32(FIFO_USER_02))
+				swiWaitForVBlank();
+			printf("Enable: 0x%lx\n", fifoGetValue32(FIFO_USER_02));
 
-				fifoSendValue32(FIFO_USER_01, 1);
-				while(!fifoCheckValue32(FIFO_USER_02))
-					swiWaitForVBlank();
-				printf("Enable: 0x%lx\n", fifoGetValue32(FIFO_USER_02));
+			// Set data transfer back up
+			REG_CAM_CNT |= 0x2000; // CAM_CNT, enable YUV-to-RGB555
+			REG_CAM_CNT = (REG_CAM_CNT & ~0x000F) | 0x0003;
+			REG_CAM_CNT |= 0x0020; // CAM_CNT, flush data fifo
+			REG_CAM_CNT |= 0x8000; // CAM_CNT, start transfer
 
-				REG_CAM_CNT |= 0x2000; // CAM_CNT, enable YUV-to-RGB555
-				REG_CAM_CNT = (REG_CAM_CNT & ~0x000F) | 0x0003;
-				REG_CAM_CNT |= 0x0020; // CAM_CNT, flush data fifo
-				REG_CAM_CNT |= 0x8000; // CAM_CNT, start transfer
-			}
-			inner = !inner;
 			// Resume transfer
 			REG_CAM_CNT |= 0x8000;
+
+			inner = !inner;
 		} else if(fatInited && pressed & (KEY_L | KEY_R)) {
 			FILE *file = fopen("photo.bmp", "wb");
 			if(file) {
