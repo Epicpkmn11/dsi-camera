@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
 	REG_SCFG_CLK |= 0x0100; // SCFG_CLK, CamExternal Clock = ON
 	swiDelay(0x14);
 
-	fifoSendValue32(FIFO_USER_01, 0); // issue "aptina_code_list_init" via I2C bus on ARM7 side
+	fifoSendValue32(FIFO_USER_01, CAM_INIT); // issue "aptina_code_list_init" via I2C bus on ARM7 side
 	while(!fifoCheckValue32(FIFO_USER_02))
 		swiWaitForVBlank();
 	printf("ID: 0x%lx\n", fifoGetValue32(FIFO_USER_02));
@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
 	REG_SCFG_CLK |= 0x0100;  // SCFG_CLK, CamExternal Clock = ON
 	swiDelay(0x14);
 
-	fifoSendValue32(FIFO_USER_01, 3); // issue "aptina_code_list_activate" via I2C bus on ARM7 side
+	fifoSendValue32(FIFO_USER_01, CAM1_ACTIVATE); // issue "aptina_code_list_activate" via I2C bus on ARM7 side
 	while(!fifoCheckValue32(FIFO_USER_02))
 		swiWaitForVBlank();
 	printf("Active: 0x%lx\n", fifoGetValue32(FIFO_USER_02));
