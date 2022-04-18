@@ -98,5 +98,5 @@ u16 aptReadRegister(u8 device, u16 reg) {
 		REG_I2CCNT = 0xC5;
 	}
 
-	return 0xffff;
+	return 0xFFFF;
 }

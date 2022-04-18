@@ -2,6 +2,8 @@
 
 #include "aptina_i2c.h"
 
+u8 currentDevice = I2C_CAM0;
+
 // Waits until the bits of the register are clear
 void aptWaitClr(u8 device, u16 reg, u16 mask) {
 	while(aptReadRegister(device, reg) & mask) {
@@ -138,6 +140,8 @@ void activate(u8 device) {
 	aptSet(device, 0x001A, 0x0200); // RESET_AND_MISC_CONTROL (Parallel On)  ;-Data on
 	if(device == I2C_CAM1)
 		i2cWriteRegister(0x4A, 0x31, 0x01);
+
+	currentDevice = device;
 }
 
 void deactivate(u8 device) {
@@ -147,4 +151,11 @@ void deactivate(u8 device) {
 	aptWaitClr(device, 0x301A, 0x0004); // UNDOC_CORE_301A (wait for StandbyDone) ;/
 	if(device == I2C_CAM1)
 		i2cWriteRegister(0x4A, 0x31, 0x00);
+
+	currentDevice = I2C_CAM0;
+}
+
+void setMode(captureMode mode) {
+	aptWriteMcu(currentDevice, 0xA103, mode);
+	aptWaitMcuClr(currentDevice, 0xA103, 0xFFFF);
 }

@@ -80,12 +80,13 @@ int main() {
 
 	setPowerButtonCB(powerButtonCB);
 
+	fifoSetValue32Handler(FIFO_USER_01, i2cFifoHandler, NULL);
+
 	// Keep the ARM7 mostly idle
 	while(!exitflag) {
 		if(0 == (REG_KEYINPUT & (KEY_SELECT | KEY_START | KEY_L | KEY_R))) {
 			exitflag = true;
 		}
-		checkFifo();
 		swiWaitForVBlank();
 	}
 	return 0;
