@@ -1,3 +1,4 @@
+arm9/include/version.h
 */build
 *.nds
 *.elf

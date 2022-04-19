@@ -10,31 +10,31 @@ void i2cFifoHandler(u32 value32, void *userdata) {
 		case CAM_INIT:
 			init(I2C_CAM0);
 			init(I2C_CAM1);
-			fifoSendValue32(FIFO_USER_01, aptReadRegister(I2C_CAM0, 0));
+			fifoSendValue32(FIFO_CAMERA, aptReadRegister(I2C_CAM0, 0));
 			break;
 		case CAM0_ACTIVATE:
 			activate(I2C_CAM0);
-			fifoSendValue32(FIFO_USER_01, CAM0_ACTIVATE);
+			fifoSendValue32(FIFO_CAMERA, CAM0_ACTIVATE);
 			break;
 		case CAM0_DEACTIVATE:
 			deactivate(I2C_CAM0);
-			fifoSendValue32(FIFO_USER_01, CAM0_DEACTIVATE);
+			fifoSendValue32(FIFO_CAMERA, CAM0_DEACTIVATE);
 			break;
 		case CAM1_ACTIVATE:
 			activate(I2C_CAM1);
-			fifoSendValue32(FIFO_USER_01, CAM1_ACTIVATE);
+			fifoSendValue32(FIFO_CAMERA, CAM1_ACTIVATE);
 			break;
 		case CAM1_DEACTIVATE:
 			deactivate(I2C_CAM1);
-			fifoSendValue32(FIFO_USER_01, CAM1_DEACTIVATE);
+			fifoSendValue32(FIFO_CAMERA, CAM1_DEACTIVATE);
 			break;
-		case CAM_MODE_PREVIEW:
+		case CAM_SET_MODE_PREVIEW:
 			setMode(CAPTURE_MODE_PREVIEW);
-			fifoSendValue32(FIFO_USER_01, CAPTURE_MODE_PREVIEW);
+			fifoSendValue32(FIFO_CAMERA, CAPTURE_MODE_PREVIEW);
 			break;
-		case CAM_MODE_CAPTURE:
+		case CAM_SET_MODE_CAPTURE:
 			setMode(CAPTURE_MODE_CAPTURE);
-			fifoSendValue32(FIFO_USER_01, CAPTURE_MODE_CAPTURE);
+			fifoSendValue32(FIFO_CAMERA, CAPTURE_MODE_CAPTURE);
 			break;
 		default:
 			break;

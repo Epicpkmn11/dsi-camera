@@ -1,6 +1,6 @@
 # DSi camera test
 
-This is an example app for using the DSi's Cameras. Currently it can show both cameras and save a picture as photo.bmp.
+This is an example app for using the DSi's cameras. Currently it can show both cameras and save a picture to `sd:/DCIM/100DSITEST/IMG_####.png`.
 
 ![Example photo](resources/example.png)
 

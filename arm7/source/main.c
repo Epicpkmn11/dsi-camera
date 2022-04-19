@@ -80,7 +80,7 @@ int main() {
 
 	setPowerButtonCB(powerButtonCB);
 
-	fifoSetValue32Handler(FIFO_USER_01, i2cFifoHandler, NULL);
+	fifoSetValue32Handler(FIFO_CAMERA, i2cFifoHandler, NULL);
 
 	// Keep the ARM7 mostly idle
 	while(!exitflag) {

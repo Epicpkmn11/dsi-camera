@@ -7,6 +7,24 @@ endif
 
 include $(DEVKITARM)/ds_rules
 
+# If on a tagged commit, use just tag
+ifneq ($(shell echo $(shell git tag -l --points-at HEAD) | head -c 1),)
+GIT_VER := $(shell git tag -l --points-at HEAD)
+else
+GIT_VER := $(shell git describe --abbrev=0 --tags)-$(shell git rev-parse --short=7 HEAD)
+endif
+
+# Ensure version.h exists
+ifeq (,$(wildcard include/version.h))
+$(shell mkdir -p include)
+$(shell touch include/version.h)
+endif
+
+# Print new version if changed
+ifeq (,$(findstring $(GIT_VER), $(shell cat include/version.h)))
+$(shell printf "#ifndef VERSION_HPP\n#define VERSION_HPP\n\n#define VER_NUMBER \"$(GIT_VER)\"\n\n#endif\n" > include/version.h)
+endif
+
 #---------------------------------------------------------------------------------
 # BUILD is the directory where object files & intermediate files will be placed
 # SOURCES is a list of directories containing source code
@@ -16,7 +34,7 @@ include $(DEVKITARM)/ds_rules
 #---------------------------------------------------------------------------------
 BUILD		:=	build
 SOURCES		:=	source
-INCLUDES	:=	include
+INCLUDES	:=	include ../shared/include
 DATA		:=
 
 #---------------------------------------------------------------------------------

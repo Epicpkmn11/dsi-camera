@@ -155,7 +155,7 @@ void deactivate(u8 device) {
 	currentDevice = I2C_CAM0;
 }
 
-void setMode(captureMode mode) {
+void setMode(CaptureMode mode) {
 	aptWriteMcu(currentDevice, 0xA103, mode);
 	aptWaitMcuClr(currentDevice, 0xA103, 0xFFFF);
 }
