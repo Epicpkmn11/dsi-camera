@@ -18,7 +18,7 @@ int clamp(int val, int min, int max) { return val < min ? min : (val > max) ? ma
 int getImageNumber() {
 	int highest = -1;
 
-	DIR *pdir = opendir("/DCIM/100DSITEST");
+	DIR *pdir = opendir("/DCIM/100DSI00");
 	if(pdir == NULL) {
 		printf("Unable to open directory");
 		return -1;
@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
 	bool fatInited = fatInitDefault();
 	if(fatInited) {
 		mkdir("/DCIM", 0777);
-		mkdir("/DCIM/100DSITEST", 0777);
+		mkdir("/DCIM/100DSI00", 0777);
 	} else {
 		printf("FAT init failed, photos cannot\nbe saved.\n");
 	}
@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
 			free(yuv);
 
 			char imgName[32];
-			sprintf(imgName, "/DCIM/100DSITEST/IMG_%04d.PNG", getImageNumber());
+			sprintf(imgName, "/DCIM/100DSI00/IMG_%04d.PNG", getImageNumber());
 			lodepng_encode24_file(imgName, rgb, 640, 480);
 			free(rgb);
 
