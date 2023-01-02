@@ -1,4 +1,4 @@
-name: Build dsi-camera
+name: Build dsi-camcorder
 
 on:
   push:
@@ -23,14 +23,14 @@ jobs:
         run: sudo apt-get -y install python
       - name: Checkout repo
         uses: actions/checkout@v1
-      - name: Build dsi-camera
+      - name: Build dsi-camcorder
         run: |
           make
 
           # Make CIA
           curl -LO https://github.com/ihaveamac/ctr_toolkit/releases/download/make_cia6.4builds/make_cia6.4builds.zip
           unzip -j make_cia6.4builds.zip linux/make_cia
-          ./make_cia --srl=dsi-camera.nds
+          ./make_cia --srl=dsi-camcorder.nds
 
           # Move builds to dir for upload
           mkdir artifacts
