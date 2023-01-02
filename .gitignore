@@ -6,3 +6,7 @@ arm9/include/version.h
 
 *.DS_Store
 .vscode
+
+out
+*.mp4
+VID_????.BIN

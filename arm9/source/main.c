@@ -1,21 +1,12 @@
 #include "camera.h"
-#include "lodepng.h"
 #include "version.h"
 
 #include <dirent.h>
 #include <fat.h>
-#include <math.h>
 #include <nds.h>
 #include <stdio.h>
 
-#define YUV_TO_R(Y, Cr) clamp(Y + Cr + (Cr >> 2) + (Cr >> 3) + (Cr >> 5), 0, 0xFF)
-#define YUV_TO_G(Y, Cb, Cr) \
-	clamp(Y - ((Cb >> 2) + (Cb >> 4) + (Cb >> 5)) - ((Cr >> 1) + (Cr >> 3) + (Cr >> 4) + (Cr >> 5)), 0, 0xFF)
-#define YUV_TO_B(Y, Cb) clamp(Y + Cb + (Cb >> 1) + (Cb >> 2) + (Cb >> 6), 0, 0xFF)
-
-int clamp(int val, int min, int max) { return val < min ? min : (val > max) ? max : val; }
-
-int getImageNumber() {
+int getVideoNumber() {
 	int highest = -1;
 
 	DIR *pdir = opendir("/DCIM/100DSI00");
@@ -28,7 +19,7 @@ int getImageNumber() {
 			if(pent == NULL)
 				break;
 
-			if(strncmp(pent->d_name, "IMG_", 4) == 0) {
+			if(strncmp(pent->d_name, "VID_", 4) == 0) {
 				int val = atoi(pent->d_name + 4);
 				if(val > highest)
 					highest = val;
@@ -46,14 +37,19 @@ int main(int argc, char **argv) {
 	videoSetMode(MODE_5_2D);
 	int bg3Main = bgInit(3, BgType_Bmp16, BgSize_B16_256x256, 1, 0);
 
-	printf("dsi-camera " VER_NUMBER "\n");
+	printf("dsi-camcorder " VER_NUMBER "\n");
 
 	bool fatInited = fatInitDefault();
 	if(fatInited) {
 		mkdir("/DCIM", 0777);
 		mkdir("/DCIM/100DSI00", 0777);
 	} else {
-		printf("FAT init failed, photos cannot\nbe saved.\n");
+		printf("FAT init failed!\n");
+		do {
+			swiWaitForVBlank();
+			scanKeys();
+		} while(!(keysDown() & KEY_START));
+		return 0;
 	}
 
 	printf("Initializing...\n");
@@ -62,82 +58,38 @@ int main(int argc, char **argv) {
 	Camera camera = CAM_OUTER;
 	cameraActivate(camera);
 
-	if(fatInited)
-		printf("\nA to swap, L/R to take picture\n");
-	else
-		printf("\nA to swap\n");
+	char vidName[32];
+	sprintf(vidName, "/DCIM/100DSI00/VID_%04d.BIN", getVideoNumber());
+	FILE *out = fopen(vidName, "wb");
+
+	printf("\nIt's recording!\n");
+	printf("START to finish\n\n");
+	printf("Output file:\n%s\n", vidName);
+
+	cpuStartTiming(0);
 
 	while(1) {
-		u16 pressed;
-		do {
-			swiWaitForVBlank();
-			if(!cameraTransferActive())
-				cameraTransferStart(bgGetGfxPtr(bg3Main), CAPTURE_MODE_PREVIEW);
-			scanKeys();
-			pressed = keysDown();
-		} while(!pressed);
+		swiWaitForVBlank();
 
-		if(pressed & KEY_A) {
-			// Wait for previous transfer to finish
-			while(cameraTransferActive())
-				swiWaitForVBlank();
-			cameraTransferStop();
+		cameraTransferStart(bgGetGfxPtr(bg3Main), CAPTURE_MODE_PREVIEW);
+		while(cameraTransferActive())
+			swiDelay(100);
 
-			// Switch camera
-			camera = camera == CAM_INNER ? CAM_OUTER : CAM_INNER;
-			cameraActivate(camera);
+		if(fwrite(bgGetGfxPtr(bg3Main), 1, 256 * 192 * 2, out) != 256 * 192 * 2) {
+			cameraDeactivate(camera);
+			fclose(out);
+			return 0;
+		}
 
-			printf("Swapped to %s camera\n", camera == CAM_INNER ? "inner" : "outer");
-		} else if(fatInited && pressed & (KEY_L | KEY_R)) {
-			printf("Capturing... ");
+		u32 time = cpuGetTiming();
+		fwrite(&time, 4, 1, out);
+		cpuStartTiming(0);
 
-			// Wait for previous transfer to finish
-			while(cameraTransferActive())
-				swiWaitForVBlank();
-
-			// Get image
-			u16 *yuv = (u16 *)malloc(640 * 480 * sizeof(u16));
-			cameraTransferStart(yuv, CAPTURE_MODE_CAPTURE);
-			while(cameraTransferActive())
-				swiWaitForVBlank();
-			cameraTransferStop();
-
-			printf("Done!\nSaving PNG... ");
-
-			// YUV422 -> RGB
-			u8 *rgb = (u8 *)malloc(640 * 480 * 3);
-			for(int py = 0; py < 480; py++) {
-				for(int px = 0; px < 640; px += 2) {
-					u8 *val = (u8 *)(yuv + py * 640 + px);
-
-					// Get YUV values
-					int Y1 = val[0];
-					int Cb = val[1] - 0x80;
-					int Y2 = val[2];
-					int Cr = val[3] - 0x80;
-
-					u8 *dst = rgb + py * (640 * 3) + px * 3;
-					// First pixel R, G, B
-					dst[0] = YUV_TO_R(Y1, Cr);
-					dst[1] = YUV_TO_G(Y1, Cb, Cr);
-					dst[2] = YUV_TO_B(Y1, Cb);
-					// Second pixel R, G, B
-					dst[3] = YUV_TO_R(Y2, Cr);
-					dst[4] = YUV_TO_G(Y2, Cb, Cr);
-					dst[5] = YUV_TO_B(Y2, Cb);
-				}
-			}
-			free(yuv);
-
-			char imgName[32];
-			sprintf(imgName, "/DCIM/100DSI00/IMG_%04d.PNG", getImageNumber());
-			lodepng_encode24_file(imgName, rgb, 640, 480);
-			free(rgb);
-
-			printf("Done!\nSaved to:\n%s\n\n", imgName);
-		} else if(pressed & KEY_START) {
+		scanKeys();
+		if(keysDown() & KEY_START) {
 			// Disable camera so the light turns off
 			cameraDeactivate(camera);
+			fclose(out);
 
 			return 0;
 		}
