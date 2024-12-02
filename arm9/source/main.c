@@ -53,6 +53,7 @@ int main(int argc, char **argv) {
 	}
 
 	printf("Initializing...\n");
+	pxiWaitRemote(PXI_CAMERA); // Wait for ARM7 to initialize PXI
 	cameraInit();
 
 	Camera camera = CAM_OUTER;

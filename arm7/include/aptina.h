@@ -1,7 +1,7 @@
 #ifndef APTINA_H
 #define APTINA_H
 
-#include "fifo_vars.h"
+#include "pxi_vars.h"
 
 #include <nds.h>
 
