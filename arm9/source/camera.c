@@ -1,4 +1,5 @@
 #include "camera.h"
+#include "calico/nds/pxi.h"
 
 #include <nds.h>
 
@@ -25,9 +26,7 @@ bool cameraInit() {
 	swiDelay(0x14);
 
 	// issue "aptina_code_list_init" via I2C bus on ARM7 side
-	fifoSendValue32(FIFO_CAMERA, CAM_INIT);
-	fifoWaitValue32(FIFO_CAMERA);
-	u32 val = fifoGetValue32(FIFO_CAMERA);
+	u32 val = pxiSendAndReceive(PXI_CAMERA, CAM_INIT);
 
 	REG_SCFG_CLK &= ~BIT(8); // CamExternal Clock = OFF
 	REG_SCFG_CLK |= BIT(8);  // CamExternal Clock = ON
@@ -41,10 +40,7 @@ bool cameraActivate(Camera cam) {
 		cameraDeactivate(activeCamera);
 
 	u32 command = (cam == CAM_INNER) ? CAM0_ACTIVATE : CAM1_ACTIVATE;
-	fifoSendValue32(FIFO_CAMERA, command);
-	fifoWaitValue32(FIFO_CAMERA);
-
-	if(fifoGetValue32(FIFO_CAMERA) == command) {
+	if(pxiSendAndReceive(PXI_CAMERA, command) == command) {
 		activeCamera = cam;
 		return true;
 	} else {
@@ -54,10 +50,7 @@ bool cameraActivate(Camera cam) {
 
 bool cameraDeactivate(Camera cam) {
 	u32 command = (cam == CAM_INNER) ? CAM0_DEACTIVATE : CAM1_DEACTIVATE;
-	fifoSendValue32(FIFO_CAMERA, command);
-	fifoWaitValue32(FIFO_CAMERA);
-
-	if(fifoGetValue32(FIFO_CAMERA) == command) {
+	if(pxiSendAndReceive(PXI_CAMERA, command) == command) {
 		activeCamera = CAM_NONE;
 		return true;
 	} else {
@@ -69,9 +62,7 @@ void cameraTransferStart(u16 *dst, CaptureMode mode) {
 	bool preview = mode == CAPTURE_MODE_PREVIEW;
 
 	if(mode != activeMode) {
-		fifoSendValue32(FIFO_CAMERA, preview ? CAM_SET_MODE_PREVIEW : CAM_SET_MODE_CAPTURE);
-		fifoWaitValue32(FIFO_CAMERA);
-		fifoGetValue32(FIFO_CAMERA);
+		pxiSendAndReceive(PXI_CAMERA, preview ? CAM_SET_MODE_PREVIEW : CAM_SET_MODE_CAPTURE);
 		activeMode = mode;
 	}
 

@@ -57,6 +57,7 @@ int main(int argc, char **argv) {
 	}
 
 	printf("Initializing...\n");
+	pxiWaitRemote(PXI_CAMERA); // Wait for ARM7 to initialize PXI
 	cameraInit();
 
 	Camera camera = CAM_OUTER;
@@ -129,7 +130,7 @@ int main(int argc, char **argv) {
 			}
 			free(yuv);
 
-			char imgName[32];
+			char imgName[35];
 			sprintf(imgName, "/DCIM/100DSI00/IMG_%04d.PNG", getImageNumber());
 			lodepng_encode24_file(imgName, rgb, 640, 480);
 			free(rgb);
