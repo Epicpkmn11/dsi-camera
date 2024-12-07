@@ -1,11 +1,11 @@
-#ifndef FIFOVARS_H
-#define FIFOVARS_H
+#ifndef PXIVARS_H
+#define PXIVARS_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define FIFO_CAMERA FIFO_USER_01
+#define PXI_CAMERA PxiChannel_User0
 
 typedef enum {
 	CAM_INIT,
@@ -15,7 +15,7 @@ typedef enum {
 	CAM1_DEACTIVATE,
 	CAM_SET_MODE_PREVIEW,
 	CAM_SET_MODE_CAPTURE
-} FifoCommand;
+} PxiCommand;
 
 typedef enum {
 	CAPTURE_MODE_PREVIEW = 1, // 256x192
@@ -26,4 +26,4 @@ typedef enum {
 }
 #endif
 
-#endif // FIFOVARS_H
+#endif // PXIVARS_H

@@ -1,15 +1,18 @@
 #ifndef I2C_HANDLER_H
 #define I2C_HANDLER_H
 
-#include "fifo_vars.h"
+#include "pxi_vars.h"
 
-#include <nds/ndstypes.h>
+#include <nds.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void i2cFifoHandler(u32 value32, void *userdata);
+extern Thread s_i2cPxiThread;
+extern u8 s_i2cPxiThreadStack[1024];
+
+int i2cPxiThreadMain(void* arg);
 
 #ifdef __cplusplus
 }
