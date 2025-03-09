@@ -16,7 +16,7 @@ How to run:
 ./convert.sh path/to/file.bin <framerate_int>
 ```
 
-![Example video](resources/tutorial.gif)
+![Example video](resources/example.gif)
 
 Credits to:
 - [Arisotura](http://kuribo64.net) for finding why it wasn't working
