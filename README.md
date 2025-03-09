@@ -2,7 +2,7 @@
 
 This is an example app for using the DSi's cameras. Currently it can show both cameras and save a picture to `sd:/DCIM/100DSI00/IMG_####.png`.
 
-![Example photo](resources/example.png)
+![Example photo](resources/example.png) ![Example video](resources/example.mp4)
 
 You can convert the .bin recording automatically with the convert.sh shell script provided.
 Requirements:
@@ -15,6 +15,8 @@ How to run:
 ```
 ./convert.sh path/to/file.bin <framerate_int>
 ```
+
+![Example video](resources/tutorial.gif)
 
 Credits to:
 - [Arisotura](http://kuribo64.net) for finding why it wasn't working
