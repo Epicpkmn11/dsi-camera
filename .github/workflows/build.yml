@@ -20,7 +20,7 @@ jobs:
     name: Build with Docker using devkitARM
     steps:
       - name: Install Python
-        run: sudo apt-get -y install python
+        run: sudo apt-get -y install python3
       - name: Checkout repo
         uses: actions/checkout@v1
       - name: Build dsi-camera
