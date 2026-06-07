@@ -1,10 +1,8 @@
 #include "camera.h"
-#include "lodepng.h"
 #include "version.h"
 
 #include <dirent.h>
 #include <fat.h>
-#include <math.h>
 #include <nds.h>
 #include <stdio.h>
 
@@ -103,9 +101,9 @@ int main(int argc, char **argv) {
 				swiWaitForVBlank();
 			cameraTransferStop();
 
-			printf("Done!\nSaving PNG... ");
+			printf("Done!\nSaving BMP... ");
 
-			// YUV422 -> RGB
+				// YUV422 -> RGB
 			u8 *rgb = (u8 *)malloc(640 * 480 * 3);
 			for(int py = 0; py < 480; py++) {
 				for(int px = 0; px < 640; px += 2) {
@@ -118,24 +116,44 @@ int main(int argc, char **argv) {
 					int Cr = val[3] - 0x80;
 
 					u8 *dst = rgb + py * (640 * 3) + px * 3;
-					// First pixel R, G, B
-					dst[0] = YUV_TO_R(Y1, Cr);
+					// First pixel B, G, R
+					dst[0] = YUV_TO_B(Y1, Cb);
 					dst[1] = YUV_TO_G(Y1, Cb, Cr);
-					dst[2] = YUV_TO_B(Y1, Cb);
-					// Second pixel R, G, B
-					dst[3] = YUV_TO_R(Y2, Cr);
+					dst[2] = YUV_TO_R(Y1, Cr);
+					// Second pixel B, G, R
+					dst[3] = YUV_TO_B(Y2, Cb);
 					dst[4] = YUV_TO_G(Y2, Cb, Cr);
-					dst[5] = YUV_TO_B(Y2, Cb);
+					dst[5] = YUV_TO_R(Y2, Cr);
 				}
 			}
 			free(yuv);
 
+			// Header for a 640x480 24-bit BMP
+			constexpr u8 bmpHeader[] = {0x42, 0x4D, 0x36, 0x10, 0x0E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x00,
+										0x00, 0x00, 0x28, 0x00, 0x00, 0x00, 0x80, 0x02, 0x00, 0x00, 0xE0, 0x01,
+										0x00, 0x00, 0x01, 0x00, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
+										0x0E, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x00, 0x00,
+										0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
 			char imgName[35];
-			sprintf(imgName, "/DCIM/100DSI00/IMG_%04d.PNG", getImageNumber());
-			lodepng_encode24_file(imgName, rgb, 640, 480);
+			sprintf(imgName, "/DCIM/100DSI00/IMG_%04d.BMP", getImageNumber());
+			FILE *file = fopen(imgName, "wb");
+			if(file) {
+				fwrite(bmpHeader, 1, sizeof(bmpHeader), file);
+	
+				// Write image data, upside down as that's how BMPs want it
+				for(int i = 479; i >= 0; i--) {
+					fwrite(rgb + (i * 640 * 3), 3, 640, file);
+				}
+
+				fclose(file);
+				printf("Done!\nSaved to:\n%s\n\n", imgName);
+			} else {
+				printf("Error!\nFailed to open:\n%s\n\n", imgName);
+			}
+
 			free(rgb);
 
-			printf("Done!\nSaved to:\n%s\n\n", imgName);
 		} else if(pressed & KEY_START) {
 			// Disable camera so the light turns off
 			cameraDeactivate(camera);
